@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+<script>const log = console.log;</script>
+
+## 명령형 코드
+<script type="module">
+// 리스트에서 홀수를 length 만큼 뽑아서 제곱한 후 모두 더하기
+function f(list, length) {
+}
+
+function main() {
+  // f([1, 2, 3, 4, 5], 1);
+  f([1, 2, 3, 4, 5], 2);
+  // f([1, 2, 3, 4, 5], 3);
+}
+main();
+</script>
+
+## 함수형 코드
+
+<script>
+</script>
+
+## 2차원 배열
+
+<script>
+const arr = [
+  [1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [9, 10]
+];
+</script>
+
+## 유저 목록
+
+<script>
+var users = [
+  { name: 'a', age: 21, family: [
+    { name: 'a1', age: 53 }, { name: 'a2', age: 47 },
+    { name: 'a3', age: 16 }, { name: 'a4', age: 14 }
+  ] },
+  { name: 'b', age: 24, family: [
+    { name: 'b1', age: 58 }, { name: 'b2', age: 51 },
+    { name: 'b3', age: 10 }, { name: 'b4', age: 22 }
+  ] },
+  { name: 'c', age: 31, family: [
+    { name: 'c1', age: 64 }, { name: 'c2', age: 62 }
+  ] },
+  { name: 'd', age: 20, family: [
+    { name: 'd1', age: 42 }, { name: 'd2', age: 42 },
+    { name: 'd3', age: 11 }, { name: 'd4', age: 7 }
+  ] }
+];
+</script>
+
+## 모나드, Promise
+ - f . g
+ - f(g(x)) = f(g(x))
+ - f(g(x)) = x
+
+<script type="module">
+const g = a => a + 1;
+const f = a => a * a;
+</script>
+
+## Kleisli Composition, Promise
+ - f(g(x)) = g(x)
+
+<script type="module">
+const g = JSON.parse;
+const f = ({k}) => k;
+</script>
+
+## 일급, Promise, go1
+
+<script>
+// delay
+
+// go1
+
+</script>
+
+## 아임포트 결제 누락 싱크
+ - https://github.com/iamport/iamport-manual/blob/master/%EC%9D%B8%EC%A6%9D%EA%B2%B0%EC%A0%9C/README.md#23-notification-url%EA%B0%80%EC%83%81%EA%B3%84%EC%A2%8C-%EC%9E%85%EA%B8%88%ED%86%B5%EB%B3%B4-%ED%8F%AC%ED%95%A8
+ - https://api.iamport.kr/
+
+<script>
+const Impt = {
+  payments: {
+    0: [{ iid: 11, oid: 1 }, { iid: 12, oid: 2 }, { iid: 13, oid: 3 }],
+    1: [{ iid: 14, oid: 4 }, { iid: 15, oid: 5 }, { iid: 16, oid: 6 }],
+    2: [{ iid: 17, oid: 7 }, { iid: 18, oid: 8 }],
+    3: [],
+    4: [],
+    //...
+  },
+  getPayments: page => {
+    console.log(`http://..?page=${page}`);
+    return delay(100, Impt.payments[page]);
+  },
+  cancelPayment: paymentId => Promise.resolve(`${paymentId}: 취소완료`)
+};
+
+const getOrders = ids => delay(100, [{ id: 1 }, { id: 3 }, { id: 7 }]);
+
+function job() {
+}
+</script>
+
+## 오늘 발표 자료와 그외 정보
+ - https://github.com/indongyoo/NAVER-Teck-Talk
+
+</body>
+</html>

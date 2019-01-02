@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+<script>const log = console.log;</script>
+
+## 명령형 코드
+<script type="module">
+// 리스트에서 홀수를 length 만큼 뽑아서 제곱한 후 모두 더하기
+function f(list, length) {
+  var acc = 0;
+  var i = 0;
+  for (const a of list) {
+    if (a % 2) {
+      acc = acc + a * a;
+      if (++i == length) break;
+    }
+  }
+  log(acc);
+}
+
+function main() {
+  f([1, 2, 3, 4, 5], 1);
+  f([1, 2, 3, 4, 5], 2);
+  f([1, 2, 3, 4, 5], 3);
+}
+// main();
+</script>
+
+## 함수형 코드
+
+<script>
+const curry = f => (a, ...bs) =>
+  bs.length ? f(a, ...bs) : (...bs) => f(a, ...bs);
+
+const filter = curry(function *(f, iter) {
+  for (const a of iter) {
+    if (f(a)) yield a;
+  }
+});
+
+const take = curry(function(length, iter) {
+  var res = [];
+  for (const a of iter) {
+    res.push(a);
+    if (res.length == length) break;
+  }
+  return res;
+});
+
+const takeWhile = curry(function(f, iter) {
+  var res = [];
+  iter = iter[Symbol.iterator]();
+  iter.return = null;
+  return function recur() {
+    for (const a of iter) {
+      const b = go1(a, f);
+      if (!b) return res;
+      if (b instanceof Promise) return b.then(
+        async b => b ? (res.push(await a), recur()) : res);
+      res.push(a);
+    }
+    return res;
+  } ();
+});
+
+const map = curry(function *(f, iter) {
+  for (const a of iter) {
+    yield f(a);
+  }
+});
+
+const smap = curry((f, iter) => take(Infinity, map(f, iter)));
+
+const reduce = curry(function(f, acc, iter) {
+  if (arguments.length == 2) {
+    iter = acc[Symbol.iterator]();
+    acc = iter.next().value;
+  }
+  for (const a of iter) {
+    acc = f(acc, a);
+  }
+  return acc;
+});
+
+function *range(stop) {
+  let start = 0;
+  while (start < stop) yield start++;
+}
+
+const go1 = (a, f) => a instanceof Promise ? a.then(f) : f(a);
+
+const go = (...as) => reduce(go1, as);
+
+const add = curry((a, b) => a + b);
+
+// 리스트에서 홀수를 length 만큼 뽑아서 제곱한 후 모두 더하기
+const f = (list, length) =>
+  reduce(add,
+    take(length,
+      map(a => a * a,
+        filter(a => a % 2, list))));
+
+const f2 = (list, length) =>
+  go(list,
+    filter(a => a % 2),
+    map(a => a * a),
+    take(length),
+    reduce(add));
+
+function main() {
+  log(f2([1, 2, 3, 4, 5], 1));
+  log(f2([1, 2, 3, 4, 5], 2));
+  log(f2([1, 2, 3, 4, 5], 3));
+}
+// main();
+</script>
+
+## 2차원 배열
+
+<script>
+const arr = [
+  [1, 2],
+  3, 4, 5,
+  // [3, 4, 5],
+  [6, 7, 8],
+  [9, 10]
+];
+function *flat(iter) {
+  for (const a of iter) {
+    if (a && a[Symbol.iterator]) yield *a;
+    else yield a;
+  }
+}
+go(arr,
+  flat,
+  filter(a => a % 2),
+  map(a => a * a),
+  take(3),
+  reduce(add)/*,
+  log*/);
+</script>
+
+## 유저 목록
+
+<script>
+var users = [
+  { name: 'a', age: 21, family: [
+    { name: 'a1', age: 53 }, { name: 'a2', age: 47 },
+    { name: 'a3', age: 16 }, { name: 'a4', age: 14 }
+  ] },
+  { name: 'b', age: 24, family: [
+    { name: 'b1', age: 58 }, { name: 'b2', age: 51 },
+    { name: 'b3', age: 10 }, { name: 'b4', age: 22 }
+  ] },
+  { name: 'c', age: 31, family: [
+    { name: 'c1', age: 64 }, { name: 'c2', age: 62 }
+  ] },
+  { name: 'd', age: 20, family: [
+    { name: 'd1', age: 42 }, { name: 'd2', age: 42 },
+    { name: 'd3', age: 11 }, { name: 'd4', age: 7 }
+  ] }
+];
+go(users,
+  map(u => u.family),
+  flat,
+  filter(u => u.age < 20),
+  map(u => u.age),
+  take(3),
+  reduce(add)/*,
+  log*/);
+</script>
+
+## 모나드, Promise
+
+<script type="module">
+// f . g
+// f(g(x)) = f(g(x))
+// f(g(x)) = x
+
+const g = a => a + 1;
+const f = a => a * a;
+
+// [1].map(g).map(f).forEach(a => log(a));
+// Promise.resolve(1).then(g).then(f).then(a => log(a));
+</script>
+
+## Kleisli Composition, Promise
+
+<script type="module">
+// f(g(x)) = g(x)
+
+const g = JSON.parse;
+const f = ({k}) => k;
+
+const fg = a => Promise.resolve(a).then(g).then(f);
+
+// fg('{"k": 10}').then(log);
+// fg('{"k: 10}').then(log).catch(() => log('실패'));
+</script>
+
+## 일급, Promise, go1
+
+<script>
+// delay
+const delay = (time = 100, a) =>
+  new Promise(resolve => setTimeout(() => resolve(a), time));
+
+// go1
+// const go1 = (a, f) => a instanceof Promise ? a.then(f) : f(a);
+// go1(1000, log);
+// go1(delay(2000, 2000), log);
+
+go(delay(100, [1, 2, 3, 4]),
+  filter(a => a % 2),
+  map(a => a * a),
+  reduce(add),
+  a => delay(100, a + 10)/*,
+  log*/);
+</script>
+
+## 아임포트 결제 누락 싱크
+ - https://github.com/iamport/iamport-manual/blob/master/%EC%9D%B8%EC%A6%9D%EA%B2%B0%EC%A0%9C/README.md#23-notification-url%EA%B0%80%EC%83%81%EA%B3%84%EC%A2%8C-%EC%9E%85%EA%B8%88%ED%86%B5%EB%B3%B4-%ED%8F%AC%ED%95%A8
+ - https://api.iamport.kr/
+
+<script>
+const Impt = {
+  payments: {
+    0: [{ iid: 11, oid: 1 }, { iid: 12, oid: 2 }, { iid: 13, oid: 3 }],
+    1: [{ iid: 14, oid: 4 }, { iid: 15, oid: 5 }, { iid: 16, oid: 6 }],
+    2: [{ iid: 17, oid: 7 }, { iid: 18, oid: 8 }],
+    3: [],
+    4: [],
+    //...
+  },
+  getPayments: page => {
+    console.log(`http://..?page=${page}`);
+    return delay(100, Impt.payments[page]);
+  },
+  cancelPayment: paymentId => Promise.resolve(`${paymentId}: 취소완료`)
+};
+
+const getOrders = ids => delay(100, [{ id: 1 }, { id: 3 }, { id: 7 }]);
+
+async function job() {
+  const payments = await go(
+    range(Infinity),
+    map(Impt.getPayments),
+    takeWhile(ps => ps.length),
+    flat,
+    take(Infinity));
+
+  const orderIds = await go(
+    payments,
+    smap(p => p.oid),
+    getOrders,
+    smap(o => o.id));
+
+  return Promise.all(go(payments,
+    filter(p => !orderIds.includes(p.oid)),
+    map(p => p.iid),
+    smap(Impt.cancelPayment)));
+}
+
+function recur() {
+  return Promise.all([
+    delay(1000 * 3),
+    job().then(log)
+  ]).then(recur);
+}
+recur();
+</script>
+
+## 오늘 발표 자료와 그외 정보
+ - https://github.com/indongyoo/NAVER-Teck-Talk
+
+</body>
+</html>
