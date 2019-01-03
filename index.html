@@ -10,31 +10,138 @@
 ## 명령형 코드
 <script type="module">
 // 리스트에서 홀수를 length 만큼 뽑아서 제곱한 후 모두 더하기
-function f(list, length) {
-}
-
-function main() {
-  // f([1, 2, 3, 4, 5], 1);
-  f([1, 2, 3, 4, 5], 2);
-  // f([1, 2, 3, 4, 5], 3);
-}
-main();
+// function f(list, length) {
+//   let i = 0;
+//   let acc = 0;
+//   for (const a of list) {
+//     if (a % 2) {
+//       acc = acc + a * a;
+//       if (++i == length) break;
+//     }
+//   }
+//   log(acc);
+// }
+//
+// function main() {
+//   f([1, 2, 3, 4, 5], 1);
+//   f([1, 2, 3, 4, 5], 2);
+//   f([1, 2, 3, 4, 5], 3);
+// }
+// main();
 </script>
 
 ## 함수형 코드
 
 <script>
+const curry = f => (a, ...bs) =>
+  bs.length ? f(a, ...bs) : (...bs) => f(a, ...bs);
+
+const L = {};
+
+L.range = function *(stop) {
+  let i = -1;
+  while (++i < stop) yield i;
+};
+
+L.filter = curry(function *(f, iter) {
+  for (const a of iter) {
+    if (f(a)) yield a;
+  }
+});
+
+L.map = curry(function *(f, iter) {
+  for (const a of iter) {
+    yield f(a);
+  }
+});
+
+const take = curry(function(length, iter) {
+  let res = [];
+  for (const a of iter) {
+    res.push(a);
+    if (res.length == length) return res;
+  }
+  return res;
+});
+
+const takeWhile = curry(function(f, iter) {
+  iter = iter[Symbol.iterator]();
+  iter.return = null;
+  let res = [];
+  return function recur() {
+    for (const a of iter) {
+      const b = go1(a, f);
+      if (!b) return res;
+      if (b instanceof Promise) return b.then(
+        async b => b ? (res.push(await a), recur()) : res);
+      res.push(a);
+    }
+    return res;
+  } ();
+});
+
+const reduce = curry(function(f, acc, iter) {
+  if (arguments.length == 2) {
+    iter = acc[Symbol.iterator]();
+    acc = iter.next().value;
+  }
+  for (const a of iter) {
+    acc = f(acc, a);
+  }
+  return acc;
+});
+
+const add = curry((a, b) => a + b);
+
+const go1 = (a, f) => a instanceof Promise ? a.then(f) : f(a);
+
+const go = (...as) => reduce(go1, as);
+
+const f = (list, length) =>
+  reduce(add, 0,
+    take(length,
+      L.map(a => a * a,
+        L.filter(a => a % 2, list))));
+
+const f2 = (list, length) =>
+  go(list,
+    L.filter(a => a % 2),
+    L.map(a => a * a),
+    take(length),
+    reduce(add));
+
+function main() {
+  // log(f2([1, 2, 3, 4, 5], 1));
+  log(f2([1, 2, 3, 4, 5], 2));
+  // log(f2([1, 2, 3, 4, 5], 3));
+  log(f2(L.range(Infinity), 200));
+}
+main();
 </script>
 
 ## 2차원 배열
 
 <script>
+console.clear();
 const arr = [
   [1, 2],
-  [3, 4, 5],
+  3, 4, 5,
   [6, 7, 8],
   [9, 10]
 ];
+L.flat = function *(iter) {
+  for (const a of iter) {
+    if (a && a[Symbol.iterator]) yield* a;
+    else yield a;
+  }
+};
+go(arr,
+  L.flat,
+  L.filter(a => a % 2),
+  L.map(a => a * a),
+  take(2),
+  reduce(add),
+  log);
 </script>
 
 ## 유저 목록
@@ -57,6 +164,16 @@ var users = [
     { name: 'd3', age: 11 }, { name: 'd4', age: 7 }
   ] }
 ];
+
+go(users,
+  // L.map(u => u.family),
+  // L.flat,
+  L.filter(u => u.age < 30),
+  L.map(u => u.age),
+  take(3),
+  reduce(add),
+  log);
+console.clear();
 </script>
 
 ## 모나드, Promise
@@ -67,6 +184,12 @@ var users = [
 <script type="module">
 const g = a => a + 1;
 const f = a => a * a;
+
+// log(f(g(1)));
+
+// [1].map(g).map(f).forEach(a => log(a));
+
+// Promise.resolve(1).then(g).then(f).then(a => log(a));
 </script>
 
 ## Kleisli Composition, Promise
@@ -75,15 +198,45 @@ const f = a => a * a;
 <script type="module">
 const g = JSON.parse;
 const f = ({k}) => k;
+
+const fg = x => Promise.resolve(x)
+  .then(g)
+  .then(f);
+
+// fg('{"k": 10 }').then(log);
+// fg('{"k: 10 }').catch(_ => '미안...').then(log);
 </script>
 
 ## 일급, Promise, go1
 
 <script>
 // delay
+const delay = (time, a) => new Promise(resolve =>
+  setTimeout(() => resolve(a), time));
+
+// delay(100, 5).then(log);
 
 // go1
 
+
+const a = 10;
+const b = delay(1000, 5);
+// go1(a, log);
+// go1(b, log);
+
+async function af() {
+  var b = await go(Promise.resolve(1),
+    a => a + 1,
+    a => delay(100, a + 10000),
+    a => delay(100, a + 10000));
+
+  var c = await go(Promise.resolve(1),
+    a => a + 1,
+    a => delay(100, a + 10000));
+
+  // log(b, c);
+}
+af();
 </script>
 
 ## 아임포트 결제 누락 싱크
@@ -102,15 +255,41 @@ const Impt = {
   },
   getPayments: page => {
     console.log(`http://..?page=${page}`);
-    return delay(100, Impt.payments[page]);
+    return delay(1000 * 2, Impt.payments[page]);
   },
   cancelPayment: paymentId => Promise.resolve(`${paymentId}: 취소완료`)
 };
 
 const getOrders = ids => delay(100, [{ id: 1 }, { id: 3 }, { id: 7 }]);
 
-function job() {
+async function job() {
+  const payments = await go(L.range(Infinity),
+    L.map(Impt.getPayments),
+    takeWhile(ps => ps.length),
+    L.flat,
+    take(Infinity));
+
+  const orderIds = await go(payments,
+    L.map(p => p.oid),
+    take(Infinity),
+    getOrders,
+    L.map(o => o.id),
+    take(Infinity));
+
+  return Promise.all(go(payments,
+    L.filter(p => !orderIds.includes(p.oid)),
+    L.map(p => p.iid),
+    take(Infinity),
+    L.map(Impt.cancelPayment),
+    take(Infinity)));
 }
+async function recur() {
+  return Promise.all([
+    delay(1000 * 3),
+    job().then(log)
+  ]).then(recur);
+}
+recur();
 </script>
 
 ## 오늘 발표 자료와 그외 정보
