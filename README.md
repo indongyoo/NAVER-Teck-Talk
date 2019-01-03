@@ -1,5 +1,11 @@
 # NAVER Teck Talk - 함수형 자바스크립트과 동시성 프로그래밍
 
+## 내용
+- 명령형 코드 함수형으로 전환하기
+- 지연 평가, 2차원 배열, 회원 다루기
+- Promise, Kleisli Composition
+- 함수형으로 아임포트 결제 누락 싱크 맞추기
+
 ## 테크톡 발표 자료
 - [영상 다시 보기](https://youtu.be/fWRMM6AaMMc)
 - [라이브 코딩 코드](https://github.com/indongyoo/NAVER-Teck-Talk/blob/master/index.pre.html)
