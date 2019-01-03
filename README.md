@@ -16,3 +16,4 @@
 - 함수형 프로그래밍과 ES6+ (동영상 강의)
   - [인프런](https://www.inflearn.com/course/functional-es6/)
   - [프로그래머스](https://programmers.co.kr/learn/courses/7637)
+- [FEDevTalk 13회](https://github.com/indongyoo/fedevtalk13)
