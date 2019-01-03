@@ -1,8 +1,8 @@
 # NAVER Teck Talk - 함수형 자바스크립트과 동시성 프로그래밍
 
 ## 테크톡 발표 자료
+- [영상 다시 보기](https://youtu.be/fWRMM6AaMMc)
 - [라이브 코딩 코드](https://github.com/indongyoo/NAVER-Teck-Talk/blob/master/index.pre.html)
-- 영상 (준비중)
 
 ## 그 외 링크
 - [마플 개발팀 Github](https://github.com/marpple)
